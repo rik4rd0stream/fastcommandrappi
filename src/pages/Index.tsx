@@ -94,9 +94,9 @@ const Index = () => {
         {/* Header */}
         <header className="flex justify-between items-center mb-6 pt-4">
           <div>
-            <h1 className="text-3xl font-black italic text-primary tracking-tighter uppercase">Despacho</h1>
+            <h1 className="text-2xl font-black italic text-primary tracking-tighter uppercase">Fast Command</h1>
             <p className="text-[10px] text-muted-foreground tracking-[0.3em] uppercase font-bold font-mono">
-              motoboy-13742 • v2
+              Despacho Rápido
             </p>
           </div>
           <button

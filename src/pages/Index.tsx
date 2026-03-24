@@ -42,12 +42,15 @@ const Index = () => {
     setIdMotoboy("");
   };
 
-  const abrirEdicao = (m: Motoboy) => {
-    setEditId(m.id);
-    setNome(m.nome);
-    setIdMotoboy(m.id_motoboy);
-    setShowCadastro(true);
-    window.scrollTo(0, 0);
+  const selecionarMotoboy = (motoboyId: string) => {
+    const m = motoboys.find((mb) => mb.id === motoboyId);
+    if (m) {
+      setEditId(m.id);
+      setNome(m.nome);
+      setIdMotoboy(m.id_motoboy);
+    } else {
+      resetForm();
+    }
   };
 
   const salvar = async () => {

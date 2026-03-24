@@ -111,8 +111,22 @@ const Index = () => {
         {showCadastro && (
           <div className="mb-8 p-6 bg-card rounded-3xl border border-primary/20 shadow-2xl animate-in slide-in-from-top-2">
             <h3 className="text-xs font-bold text-primary mb-4 uppercase">
-              {editId ? "Editar Motoboy" : "Novo Motoboy"}
+              Gerenciar Motoboys
             </h3>
+            {motoboys.length > 0 && (
+              <select
+                value={editId || ""}
+                onChange={(e) => selecionarMotoboy(e.target.value)}
+                className="w-full p-4 mb-3 bg-background rounded-xl outline-none border border-border text-foreground"
+              >
+                <option value="">+ Novo Motoboy</option>
+                {motoboys.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.nome} (ID: {m.id_motoboy})
+                  </option>
+                ))}
+              </select>
+            )}
             <input
               value={nome}
               onChange={(e) => setNome(e.target.value)}
@@ -129,7 +143,7 @@ const Index = () => {
             />
             <div className="flex gap-2">
               <button onClick={salvar} className="flex-1 p-4 bg-primary text-primary-foreground rounded-xl font-bold uppercase text-xs">
-                Salvar
+                {editId ? "Atualizar" : "Salvar"}
               </button>
               {editId && (
                 <button onClick={deletar} className="p-4 bg-destructive/20 text-destructive border border-destructive/30 rounded-xl font-bold text-xs uppercase">
@@ -207,12 +221,6 @@ const Index = () => {
                   <span className="text-[9px] text-primary font-mono font-bold tracking-tighter">
                     ID: {m.id_motoboy}
                   </span>
-                </button>
-                <button
-                  onClick={() => abrirEdicao(m)}
-                  className="absolute -top-1 -right-1 w-6 h-6 bg-secondary border border-border rounded-full text-[10px] flex items-center justify-center shadow-md active:bg-primary"
-                >
-                  ✏️
                 </button>
               </div>
             ))

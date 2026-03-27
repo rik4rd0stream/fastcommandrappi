@@ -1,7 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 
-const REDASH_URL =
-  "/api/redash/api/queries/130603/results.json?api_key=VqwlaUY9wOLjhUJTvrfuKdFExSsJG8ktuzUXy4fR";
+const getRedashUrl = () => {
+  if (import.meta.env.DEV) {
+    return "/api/redash/api/queries/130603/results.json?api_key=VqwlaUY9wOLjhUJTvrfuKdFExSsJG8ktuzUXy4fR";
+  }
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  return `${supabaseUrl}/functions/v1/redash-proxy`;
+};
 
 interface Pedido {
   order_id: string | number;
@@ -22,7 +27,7 @@ const PedidosList = ({ onSelectPedido, pedidoSelecionado }: PedidosListProps) =>
     setLoading(true);
     setErro("");
     try {
-      const response = await fetch(REDASH_URL);
+      const response = await fetch(getRedashUrl());
       if (!response.ok) throw new Error("Erro ao buscar pedidos");
       const data = await response.json();
       const rows = data.query_result.data.rows;

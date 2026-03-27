@@ -27,7 +27,7 @@ const PedidosList = ({ onSelectPedido, pedidoSelecionado }: PedidosListProps) =>
     setLoading(true);
     setErro("");
     try {
-      const response = await fetch(REDASH_URL);
+      const response = await fetch(getRedashUrl());
       if (!response.ok) throw new Error("Erro ao buscar pedidos");
       const data = await response.json();
       const rows = data.query_result.data.rows;

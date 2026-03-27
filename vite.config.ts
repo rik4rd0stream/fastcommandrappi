@@ -12,6 +12,13 @@ export default defineConfig(({ mode }) => ({
     hmr: {
       overlay: false,
     },
+    proxy: {
+      "/api/redash": {
+        target: "https://redash.rappi.com",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/redash/, ""),
+      },
+    },
   },
   plugins: [
     react(),

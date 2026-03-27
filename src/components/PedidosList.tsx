@@ -4,8 +4,8 @@ const getRedashUrl = () => {
   if (import.meta.env.DEV) {
     return "/api/redash/api/queries/130603/results.json?api_key=VqwlaUY9wOLjhUJTvrfuKdFExSsJG8ktuzUXy4fR";
   }
-  const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-  return `https://${projectId}.supabase.co/functions/v1/redash-proxy`;
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  return `${supabaseUrl}/functions/v1/redash-proxy`;
 };
 
 interface Pedido {

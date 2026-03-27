@@ -64,6 +64,9 @@ const PedidosList = ({ onSelectPedido, pedidoSelecionado }: PedidosListProps) =>
         <h2 className="text-[9px] font-bold text-muted-foreground uppercase tracking-[0.3em] ml-2 font-mono italic">
           Pedidos Sin RT
         </h2>
+        <span className="text-[11px] font-bold text-primary bg-primary/10 border border-primary/20 rounded-full px-2.5 py-0.5 font-mono">
+          {pedidos.length}
+        </span>
         <button
           onClick={buscarPedidos}
           disabled={loading}

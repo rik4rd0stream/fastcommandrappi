@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 
 const REDASH_URL =
-  "https://redash.rappi.com/api/queries/130603/results.json?api_key=VqwlaUY9wOLjhUJTvrfuKdFExSsJG8ktuzUXy4fR";
+  "/api/redash/api/queries/130603/results.json?api_key=VqwlaUY9wOLjhUJTvrfuKdFExSsJG8ktuzUXy4fR";
 
 interface Pedido {
   order_id: string | number;

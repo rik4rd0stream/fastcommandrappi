@@ -1,7 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 
-const REDASH_URL =
-  "/api/redash/api/queries/130603/results.json?api_key=VqwlaUY9wOLjhUJTvrfuKdFExSsJG8ktuzUXy4fR";
+const getRedashUrl = () => {
+  if (import.meta.env.DEV) {
+    return "/api/redash/api/queries/130603/results.json?api_key=VqwlaUY9wOLjhUJTvrfuKdFExSsJG8ktuzUXy4fR";
+  }
+  const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+  return `https://${projectId}.supabase.co/functions/v1/redash-proxy`;
+};
 
 interface Pedido {
   order_id: string | number;

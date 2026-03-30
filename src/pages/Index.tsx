@@ -182,15 +182,15 @@ const Index = () => {
         />
 
         {/* Input Pedido Manual */}
-        <div className="mb-8">
-          <div className="relative mb-3">
+        <div className="mb-6">
+          <div className="relative mb-2">
             <input
               value={idPedido}
               onChange={(e) => setIdPedido(e.target.value.replace(/\D/g, ""))}
               type="text"
               inputMode="numeric"
               placeholder="ID DO PEDIDO"
-              className="w-full p-5 bg-background border-2 border-border rounded-2xl text-2xl font-black text-center text-primary outline-none focus:border-primary/50 transition-all"
+              className="w-full p-3.5 bg-background border-2 border-border rounded-2xl text-xl font-black text-center text-primary outline-none focus:border-primary/50 transition-all"
             />
             {idPedido && (
               <button onClick={() => setIdPedido("")} className="absolute right-5 top-1/2 -translate-y-1/2 text-muted-foreground text-xl font-bold">
@@ -200,7 +200,7 @@ const Index = () => {
           </div>
           <button
             onClick={colarPedido}
-            className="w-full p-4 bg-primary/10 text-primary border border-primary/30 rounded-xl font-bold text-xs uppercase active:scale-95 transition-all flex items-center justify-center gap-2"
+            className="w-full p-3 bg-primary/10 text-primary border border-primary/30 rounded-xl font-bold text-xs uppercase active:scale-95 transition-all flex items-center justify-center gap-2"
           >
             <span>📋</span> COLAR MANUAL
           </button>

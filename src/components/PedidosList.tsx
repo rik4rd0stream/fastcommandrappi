@@ -64,7 +64,7 @@ const PedidosList = ({ onSelectPedido, pedidoSelecionado }: PedidosListProps) =>
         <h2 className="text-[9px] font-bold text-muted-foreground uppercase tracking-[0.3em] ml-2 font-mono italic">
           Pedidos Sin RT
         </h2>
-        <span className="text-[11px] font-bold text-primary bg-primary/10 border border-primary/20 rounded-full px-2.5 py-0.5 font-mono">
+        <span className="text-[14px] font-black text-primary bg-primary/15 border-2 border-primary/30 rounded-full px-3.5 py-1 font-mono min-w-[36px] text-center">
           {pedidos.length}
         </span>
         <button
@@ -91,7 +91,7 @@ const PedidosList = ({ onSelectPedido, pedidoSelecionado }: PedidosListProps) =>
           Nenhum pedido disponível no momento
         </p>
       ) : (
-        <div className="grid grid-cols-1 gap-2 max-h-[200px] overflow-y-auto pr-1">
+        <div className="grid grid-cols-1 gap-1.5 max-h-[300px] overflow-y-auto pr-1">
           {pedidos.map((p) => {
             const id = String(p.order_id);
             const isSelected = pedidoSelecionado === id;
@@ -99,20 +99,18 @@ const PedidosList = ({ onSelectPedido, pedidoSelecionado }: PedidosListProps) =>
               <button
                 key={id}
                 onClick={() => onSelectPedido(id)}
-                className={`w-full p-3 rounded-xl border text-left transition-all active:scale-[0.98] ${
+                className={`w-full px-3 py-2 rounded-xl border text-left transition-all active:scale-[0.98] ${
                   isSelected
                     ? "bg-primary/20 border-primary/50 shadow-lg shadow-primary/10"
                     : "bg-card/80 border-border"
                 }`}
               >
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-[12px] text-foreground">
-                    {p.store_name}
-                  </span>
-                  <span className={`text-[10px] font-mono font-bold ${isSelected ? "text-primary" : "text-muted-foreground"}`}>
-                    #{id}
-                  </span>
-                </div>
+                <span className="font-bold text-[13px] text-foreground block leading-tight">
+                  {p.store_name}
+                </span>
+                <span className={`text-[10px] font-mono font-bold ${isSelected ? "text-primary" : "text-muted-foreground"}`}>
+                  #{id}
+                </span>
               </button>
             );
           })}

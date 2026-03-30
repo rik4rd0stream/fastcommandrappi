@@ -9,7 +9,7 @@ interface Motoboy {
   id_motoboy: string;
 }
 
-const COMMANDS = ["!!bundleBR", "!!rebr", "!!Br"] as const;
+const COMMANDS = ["!!bundleBR", "!!rebr", "!!Br", "!!forzabr"] as const;
 
 const Index = () => {
   const [motoboys, setMotoboys] = useState<Motoboy[]>([]);

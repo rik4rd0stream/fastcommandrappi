@@ -113,6 +113,11 @@ const PedidosList = ({ onSelectPedido, pedidoSelecionado }: PedidosListProps) =>
                 <span className={`text-[10px] font-mono font-bold ${isSelected ? "text-primary" : "text-muted-foreground"}`}>
                   #{id}
                 </span>
+                {p.direccion_entrega && (
+                  <span className="text-[9px] text-muted-foreground block leading-tight mt-0.5 truncate">
+                    📍 {p.direccion_entrega}
+                  </span>
+                )}
               </button>
             );
           })}

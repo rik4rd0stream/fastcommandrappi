@@ -11,6 +11,7 @@ const getRedashUrl = () => {
 interface Pedido {
   order_id: string | number;
   store_name: string;
+  direccion_entrega: string;
 }
 
 interface PedidosListProps {

@@ -44,6 +44,7 @@ const PedidosList = ({ onSelectPedido, pedidoSelecionado }: PedidosListProps) =>
         disponiveis.map((p: any) => ({
           order_id: p.order_id,
           store_name: p.store_name,
+          direccion_entrega: p.direccion_entrega || "",
         }))
       );
     } catch (e: any) {

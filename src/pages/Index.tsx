@@ -84,10 +84,20 @@ const Index = () => {
 
   const enviar = (nomeMotoboy: string, id: string) => {
     if (!idPedido) return alert("Falta o ID do pedido!");
-    const msg = `${comandoAtual} ${idPedido} ${id}`;
-    navigator.clipboard.writeText(msg).then(() => {
-      window.location.href = `https://wa.me/?text=${encodeURIComponent(msg)}`;
-    });
+    
+    const executarEnvio = () => {
+      const msg = `${comandoAtual} ${idPedido} ${id}`;
+      setPedidosEnviados((prev) => new Set(prev).add(idPedido));
+      navigator.clipboard.writeText(msg).then(() => {
+        window.location.href = `https://wa.me/?text=${encodeURIComponent(msg)}`;
+      });
+    };
+
+    if (pedidosEnviados.has(idPedido)) {
+      if (!confirm("⚠️ Você já tentou enviar esse pedido!\nDeseja repetir mesmo assim?")) return;
+    }
+    
+    executarEnvio();
   };
 
   return (

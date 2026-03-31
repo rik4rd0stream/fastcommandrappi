@@ -11,6 +11,7 @@ const getRedashUrl = () => {
 interface Pedido {
   order_id: string | number;
   store_name: string;
+  direccion_entrega: string;
 }
 
 interface PedidosListProps {
@@ -43,6 +44,7 @@ const PedidosList = ({ onSelectPedido, pedidoSelecionado }: PedidosListProps) =>
         disponiveis.map((p: any) => ({
           order_id: p.order_id,
           store_name: p.store_name,
+          direccion_entrega: p.direccion_entrega || "",
         }))
       );
     } catch (e: any) {
@@ -111,6 +113,11 @@ const PedidosList = ({ onSelectPedido, pedidoSelecionado }: PedidosListProps) =>
                 <span className={`text-[10px] font-mono font-bold ${isSelected ? "text-primary" : "text-muted-foreground"}`}>
                   #{id}
                 </span>
+                {p.direccion_entrega && (
+                  <span className="text-[9px] text-muted-foreground block leading-tight mt-0.5 truncate">
+                    📍 {p.direccion_entrega}
+                  </span>
+                )}
               </button>
             );
           })}

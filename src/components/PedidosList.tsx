@@ -110,14 +110,14 @@ const PedidosList = ({ onSelectPedido, pedidoSelecionado }: PedidosListProps) =>
                 <span className="font-bold text-[13px] text-foreground block leading-tight">
                   {p.store_name}
                 </span>
-                <span className={`text-[10px] font-mono font-bold ${isSelected ? "text-primary" : "text-muted-foreground"}`}>
-                  #{id}
-                </span>
                 {p.direccion_entrega && (
-                  <span className="text-[9px] text-muted-foreground block leading-tight mt-0.5 truncate">
+                  <span className="text-[11px] text-muted-foreground block leading-tight mt-0.5 truncate">
                     📍 {p.direccion_entrega}
                   </span>
                 )}
+                <span className={`text-[10px] font-mono font-bold mt-0.5 block ${isSelected ? "text-primary" : "text-muted-foreground"}`}>
+                  #{id}
+                </span>
               </button>
             );
           })}

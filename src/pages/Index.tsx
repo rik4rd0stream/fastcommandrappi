@@ -19,6 +19,7 @@ const Index = () => {
   const [editId, setEditId] = useState<string | null>(null);
   const [nome, setNome] = useState("");
   const [idMotoboy, setIdMotoboy] = useState("");
+  const [pedidosEnviados, setPedidosEnviados] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const q = query(collection(db, "entregadores"), orderBy("nome", "asc"));

@@ -20,8 +20,14 @@ interface RTInfo {
   pedidos: PedidoRT[];
 }
 
+interface MotoboyRef {
+  id_motoboy: string;
+  nome: string;
+}
+
 interface RTConsultaProps {
   onClose: () => void;
+  motoboys: MotoboyRef[];
 }
 
 const RTConsulta = ({ onClose }: RTConsultaProps) => {

@@ -28,9 +28,10 @@ interface MotoboyRef {
 interface RTConsultaProps {
   onClose: () => void;
   motoboys: MotoboyRef[];
+  onSelectPedido?: (orderId: string) => void;
 }
 
-const RTConsulta = ({ onClose, motoboys }: RTConsultaProps) => {
+const RTConsulta = ({ onClose, motoboys, onSelectPedido }: RTConsultaProps) => {
   const [rts, setRts] = useState<RTInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState("");
@@ -175,9 +176,17 @@ const RTConsulta = ({ onClose, motoboys }: RTConsultaProps) => {
                         </span>
                         <div className="flex items-center gap-2 ml-2">
                           {p.externo && (
-                            <span className="text-destructive text-[9px] font-bold bg-destructive/15 px-1.5 py-0.5 rounded">
-                              EXTERNO
-                            </span>
+                            <>
+                              <span className="text-destructive text-[9px] font-bold bg-destructive/15 px-1.5 py-0.5 rounded">
+                                EXTERNO
+                              </span>
+                              <button
+                                onClick={() => onSelectPedido?.(p.order_id)}
+                                className="text-[9px] font-bold bg-primary/15 text-primary px-2 py-0.5 rounded border border-primary/30 active:scale-90 transition-transform"
+                              >
+                                📋 Usar
+                              </button>
+                            </>
                           )}
                           <span className="font-mono font-bold text-foreground">
                             #{p.order_id}

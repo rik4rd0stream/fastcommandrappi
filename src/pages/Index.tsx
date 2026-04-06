@@ -255,7 +255,7 @@ const Index = () => {
           )}
         </div>
       </div>
-      {showRTConsulta && <RTConsulta onClose={() => setShowRTConsulta(false)} motoboys={motoboys.map(m => ({ id_motoboy: m.id_motoboy, nome: m.nome }))} />}
+      {showRTConsulta && <RTConsulta onClose={() => setShowRTConsulta(false)} motoboys={motoboys.map(m => ({ id_motoboy: m.id_motoboy, nome: m.nome }))} onSelectPedido={(id) => { setIdPedido(id); setShowRTConsulta(false); }} />}
     </div>
   );
 };

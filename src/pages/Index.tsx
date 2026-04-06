@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, orderBy, query } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import PedidosList from "@/components/PedidosList";
+import RTConsulta from "@/components/RTConsulta";
 
 interface Motoboy {
   id: string;
@@ -20,6 +21,7 @@ const Index = () => {
   const [nome, setNome] = useState("");
   const [idMotoboy, setIdMotoboy] = useState("");
   const [pedidosEnviados, setPedidosEnviados] = useState<Set<string>>(new Set());
+  const [showRTConsulta, setShowRTConsulta] = useState(false);
 
   useEffect(() => {
     const q = query(collection(db, "entregadores"), orderBy("nome", "asc"));
@@ -111,12 +113,20 @@ const Index = () => {
               Despacho Rápido
             </p>
           </div>
-          <button
-            onClick={toggleCadastro}
-            className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/30 flex items-center justify-center text-primary text-2xl font-bold active:scale-90 shadow-lg shadow-primary/10 transition-transform"
-          >
-            +
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowRTConsulta(true)}
+              className="h-12 px-3 rounded-2xl bg-accent/10 border border-accent/30 flex items-center justify-center text-accent-foreground text-[10px] font-bold uppercase active:scale-90 shadow-lg transition-transform"
+            >
+              📋 RTs
+            </button>
+            <button
+              onClick={toggleCadastro}
+              className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/30 flex items-center justify-center text-primary text-2xl font-bold active:scale-90 shadow-lg shadow-primary/10 transition-transform"
+            >
+              +
+            </button>
+          </div>
         </header>
 
         {/* Painel Cadastro */}

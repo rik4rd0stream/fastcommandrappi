@@ -30,7 +30,7 @@ interface RTConsultaProps {
   motoboys: MotoboyRef[];
 }
 
-const RTConsulta = ({ onClose }: RTConsultaProps) => {
+const RTConsulta = ({ onClose, motoboys }: RTConsultaProps) => {
   const [rts, setRts] = useState<RTInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState("");

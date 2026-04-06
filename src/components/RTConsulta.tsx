@@ -28,6 +28,7 @@ interface MotoboyRef {
 interface RTConsultaProps {
   onClose: () => void;
   motoboys: MotoboyRef[];
+  onSelectPedido?: (orderId: string) => void;
 }
 
 const RTConsulta = ({ onClose, motoboys }: RTConsultaProps) => {

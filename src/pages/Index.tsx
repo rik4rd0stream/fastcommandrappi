@@ -255,7 +255,7 @@ const Index = () => {
           )}
         </div>
       </div>
-      {showRTConsulta && <RTConsulta onClose={() => setShowRTConsulta(false)} />}
+      {showRTConsulta && <RTConsulta onClose={() => setShowRTConsulta(false)} motoboys={motoboys.map(m => ({ id_motoboy: m.id_motoboy, nome: m.nome }))} />}
     </div>
   );
 };

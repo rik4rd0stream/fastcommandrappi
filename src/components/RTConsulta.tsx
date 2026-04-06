@@ -20,11 +20,17 @@ interface RTInfo {
   pedidos: PedidoRT[];
 }
 
-interface RTConsultaProps {
-  onClose: () => void;
+interface MotoboyRef {
+  id_motoboy: string;
+  nome: string;
 }
 
-const RTConsulta = ({ onClose }: RTConsultaProps) => {
+interface RTConsultaProps {
+  onClose: () => void;
+  motoboys: MotoboyRef[];
+}
+
+const RTConsulta = ({ onClose, motoboys }: RTConsultaProps) => {
   const [rts, setRts] = useState<RTInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState("");
@@ -38,15 +44,7 @@ const RTConsulta = ({ onClose }: RTConsultaProps) => {
       const data = await response.json();
       const rows = data.query_result.data.rows;
 
-      // Log field names once for debugging
-      if (rows.length > 0) {
-        console.log("Redash fields:", Object.keys(rows[0]));
-        // Log a sample row with EXTERNO if exists
-        const externoRow = rows.find((r: any) => 
-          Object.values(r).some((v: any) => String(v).toUpperCase().includes("EXTERNO"))
-        );
-        if (externoRow) console.log("Sample EXTERNO row:", externoRow);
-      }
+      const motoboyMap = new Map(motoboys.map(m => [m.id_motoboy, m.nome]));
 
       const alphaville = rows.filter((p: any) => p.point_id == 9944);
       const comRT = alphaville.filter(
@@ -57,16 +55,16 @@ const RTConsulta = ({ onClose }: RTConsultaProps) => {
       comRT.forEach((p: any) => {
         const rtId = String(p.rt_asignado_orden);
         if (!grouped[rtId]) {
+          const nomeCadastro = motoboyMap.get(rtId) || "";
           grouped[rtId] = {
             rt_id: rtId,
-            rt_name: p.rt_name || p.shopper_name || p.nombre_rt || "",
+            rt_name: nomeCadastro,
             pedidos: [],
           };
         }
         
-        // Check all fields for "EXTERNO"
-        const allValues = Object.values(p).map((v: any) => String(v).toUpperCase());
-        const isExterno = allValues.some((v) => v.includes("EXTERNO"));
+        const esTrusted = String(p.es_trusted || "");
+        const isExterno = esTrusted.includes("EXTERNO");
         
         grouped[rtId].pedidos.push({
           order_id: String(p.order_id),

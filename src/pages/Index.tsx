@@ -255,6 +255,7 @@ const Index = () => {
           )}
         </div>
       </div>
+      {showRTConsulta && <RTConsulta onClose={() => setShowRTConsulta(false)} />}
     </div>
   );
 };

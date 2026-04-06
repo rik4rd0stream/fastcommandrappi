@@ -8,9 +8,16 @@ const getRedashUrl = () => {
   return `${supabaseUrl}/functions/v1/redash-proxy`;
 };
 
+interface PedidoRT {
+  order_id: string;
+  store_name: string;
+  externo: boolean;
+}
+
 interface RTInfo {
-  rt: string;
-  pedidos: { order_id: string; store_name: string; externo: boolean }[];
+  rt_id: string;
+  rt_name: string;
+  pedidos: PedidoRT[];
 }
 
 interface RTConsultaProps {
@@ -31,6 +38,16 @@ const RTConsulta = ({ onClose }: RTConsultaProps) => {
       const data = await response.json();
       const rows = data.query_result.data.rows;
 
+      // Log field names once for debugging
+      if (rows.length > 0) {
+        console.log("Redash fields:", Object.keys(rows[0]));
+        // Log a sample row with EXTERNO if exists
+        const externoRow = rows.find((r: any) => 
+          Object.values(r).some((v: any) => String(v).toUpperCase().includes("EXTERNO"))
+        );
+        if (externoRow) console.log("Sample EXTERNO row:", externoRow);
+      }
+
       const alphaville = rows.filter((p: any) => p.point_id == 9944);
       const comRT = alphaville.filter(
         (p: any) => p.rt_asignado_orden !== null && p.rt_asignado_orden !== ""
@@ -38,14 +55,23 @@ const RTConsulta = ({ onClose }: RTConsultaProps) => {
 
       const grouped: Record<string, RTInfo> = {};
       comRT.forEach((p: any) => {
-        const rt = String(p.rt_asignado_orden);
-        if (!grouped[rt]) {
-          grouped[rt] = { rt, pedidos: [] };
+        const rtId = String(p.rt_asignado_orden);
+        if (!grouped[rtId]) {
+          grouped[rtId] = {
+            rt_id: rtId,
+            rt_name: p.rt_name || p.shopper_name || p.nombre_rt || "",
+            pedidos: [],
+          };
         }
-        grouped[rt].pedidos.push({
+        
+        // Check all fields for "EXTERNO"
+        const allValues = Object.values(p).map((v: any) => String(v).toUpperCase());
+        const isExterno = allValues.some((v) => v.includes("EXTERNO"));
+        
+        grouped[rtId].pedidos.push({
           order_id: String(p.order_id),
           store_name: p.store_name || "",
-          externo: String(p.picking_type || "").toUpperCase().includes("EXTERNO"),
+          externo: isExterno,
         });
       });
 
@@ -113,9 +139,10 @@ const RTConsulta = ({ onClose }: RTConsultaProps) => {
             </p>
             {rts.map((rt) => {
               const temExterno = rt.pedidos.some((p) => p.externo);
+              const externoCount = rt.pedidos.filter((p) => p.externo).length;
               return (
                 <div
-                  key={rt.rt}
+                  key={rt.rt_id}
                   className={`p-4 rounded-2xl border ${
                     temExterno
                       ? "bg-destructive/5 border-destructive/30"
@@ -123,33 +150,35 @@ const RTConsulta = ({ onClose }: RTConsultaProps) => {
                   }`}
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <span className="font-black text-[15px] text-foreground">
-                      RT: {rt.rt}
-                    </span>
-                    <div className="flex items-center gap-2">
+                    <div>
+                      <span className="font-black text-[14px] text-foreground block">
+                        RT: {rt.rt_id}{rt.rt_name ? ` - ${rt.rt_name}` : ""}
+                      </span>
                       {temExterno && (
-                        <span className="text-[9px] font-bold text-destructive bg-destructive/15 border border-destructive/30 rounded-full px-2 py-0.5 uppercase">
-                          ❌ Externo
+                        <span className="text-[10px] font-bold text-destructive">
+                          ❌ {externoCount} externo{externoCount > 1 ? "s" : ""}
                         </span>
                       )}
-                      <span className="text-[13px] font-black text-primary bg-primary/15 border-2 border-primary/30 rounded-full px-3 py-0.5 font-mono min-w-[28px] text-center">
-                        {rt.pedidos.length}
-                      </span>
                     </div>
+                    <span className="text-[15px] font-black text-primary bg-primary/15 border-2 border-primary/30 rounded-full px-3.5 py-1 font-mono min-w-[32px] text-center">
+                      {rt.pedidos.length}
+                    </span>
                   </div>
                   <div className="space-y-1">
                     {rt.pedidos.map((p) => (
                       <div
                         key={p.order_id}
-                        className="flex items-center justify-between text-[11px] px-2 py-1 rounded-lg bg-background/50"
+                        className={`flex items-center justify-between text-[11px] px-2 py-1.5 rounded-lg ${
+                          p.externo ? "bg-destructive/10" : "bg-background/50"
+                        }`}
                       >
                         <span className="text-muted-foreground truncate flex-1">
                           {p.store_name}
                         </span>
                         <div className="flex items-center gap-2 ml-2">
                           {p.externo && (
-                            <span className="text-destructive text-[9px] font-bold">
-                              EXT
+                            <span className="text-destructive text-[9px] font-bold bg-destructive/15 px-1.5 py-0.5 rounded">
+                              EXTERNO
                             </span>
                           )}
                           <span className="font-mono font-bold text-foreground">

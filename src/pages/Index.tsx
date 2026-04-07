@@ -31,9 +31,11 @@ const Index = () => {
   useEffect(() => {
     const registerFCM = async () => {
       try {
-        // VAPID key from Firebase Console > Project Settings > Cloud Messaging > Web Push certificates
-        const vapidKey = "YOUR_VAPID_KEY"; // Will be replaced with actual key
-        if (vapidKey === "YOUR_VAPID_KEY") {
+        // Fetch VAPID key from edge function
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        const res = await fetch(`${supabaseUrl}/functions/v1/get-vapid-key`);
+        const { vapidKey } = await res.json();
+        if (!vapidKey) {
           console.warn("FCM VAPID key not configured yet");
           return;
         }

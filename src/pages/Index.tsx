@@ -25,6 +25,47 @@ const Index = () => {
   const [idMotoboy, setIdMotoboy] = useState("");
   const [pedidosEnviados, setPedidosEnviados] = useState<Set<string>>(new Set());
   const [showRTConsulta, setShowRTConsulta] = useState(false);
+  const [showSolicitacao, setShowSolicitacao] = useState(false);
+
+  // Register for FCM notifications on mount
+  useEffect(() => {
+    const registerFCM = async () => {
+      try {
+        // VAPID key from Firebase Console > Project Settings > Cloud Messaging > Web Push certificates
+        const vapidKey = "YOUR_VAPID_KEY"; // Will be replaced with actual key
+        if (vapidKey === "YOUR_VAPID_KEY") {
+          console.warn("FCM VAPID key not configured yet");
+          return;
+        }
+        const token = await requestNotificationPermission(vapidKey);
+        if (token) {
+          // Store token in Supabase
+          await supabase.from("fcm_tokens").upsert(
+            { token, device_info: navigator.userAgent },
+            { onConflict: "token" }
+          );
+          console.log("FCM token registered successfully");
+        }
+      } catch (e) {
+        console.error("FCM registration error:", e);
+      }
+    };
+    registerFCM();
+
+    // Listen for foreground messages
+    const unsubscribe = onForegroundMessage((payload) => {
+      console.log("Foreground message:", payload);
+      const data = payload.data || {};
+      if (Notification.permission === "granted") {
+        new Notification(data.title || "Nova Solicitação", {
+          body: data.body || "",
+          icon: "/icon-192.png",
+        });
+      }
+    });
+
+    return () => unsubscribe?.();
+  }, []);
 
   useEffect(() => {
     const q = query(collection(db, "entregadores"), orderBy("nome", "asc"));

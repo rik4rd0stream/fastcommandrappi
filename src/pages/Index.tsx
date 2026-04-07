@@ -1,8 +1,11 @@
 import { useState, useEffect } from "react";
 import { collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, orderBy, query } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { supabase } from "@/integrations/supabase/client";
+import { requestNotificationPermission, onForegroundMessage } from "@/lib/fcm";
 import PedidosList from "@/components/PedidosList";
 import RTConsulta from "@/components/RTConsulta";
+import SolicitacaoPedido from "@/components/SolicitacaoPedido";
 
 interface Motoboy {
   id: string;
@@ -22,6 +25,47 @@ const Index = () => {
   const [idMotoboy, setIdMotoboy] = useState("");
   const [pedidosEnviados, setPedidosEnviados] = useState<Set<string>>(new Set());
   const [showRTConsulta, setShowRTConsulta] = useState(false);
+  const [showSolicitacao, setShowSolicitacao] = useState(false);
+
+  // Register for FCM notifications on mount
+  useEffect(() => {
+    const registerFCM = async () => {
+      try {
+        // VAPID key from Firebase Console > Project Settings > Cloud Messaging > Web Push certificates
+        const vapidKey = "YOUR_VAPID_KEY"; // Will be replaced with actual key
+        if (vapidKey === "YOUR_VAPID_KEY") {
+          console.warn("FCM VAPID key not configured yet");
+          return;
+        }
+        const token = await requestNotificationPermission(vapidKey);
+        if (token) {
+          // Store token in Supabase
+          await supabase.from("fcm_tokens").upsert(
+            { token, device_info: navigator.userAgent },
+            { onConflict: "token" }
+          );
+          console.log("FCM token registered successfully");
+        }
+      } catch (e) {
+        console.error("FCM registration error:", e);
+      }
+    };
+    registerFCM();
+
+    // Listen for foreground messages
+    const unsubscribe = onForegroundMessage((payload) => {
+      console.log("Foreground message:", payload);
+      const data = payload.data || {};
+      if (Notification.permission === "granted") {
+        new Notification(data.title || "Nova Solicitação", {
+          body: data.body || "",
+          icon: "/icon-192.png",
+        });
+      }
+    });
+
+    return () => unsubscribe?.();
+  }, []);
 
   useEffect(() => {
     const q = query(collection(db, "entregadores"), orderBy("nome", "asc"));
@@ -114,6 +158,12 @@ const Index = () => {
             </p>
           </div>
           <div className="flex gap-2">
+            <button
+              onClick={() => setShowSolicitacao(true)}
+              className="h-12 px-3 rounded-2xl bg-chart-4/10 border border-chart-4/30 flex items-center justify-center text-accent-foreground text-[10px] font-bold uppercase active:scale-90 shadow-lg transition-transform"
+            >
+              📩 Solicitar
+            </button>
             <button
               onClick={() => setShowRTConsulta(true)}
               className="h-12 px-3 rounded-2xl bg-accent/10 border border-accent/30 flex items-center justify-center text-accent-foreground text-[10px] font-bold uppercase active:scale-90 shadow-lg transition-transform"
@@ -256,6 +306,7 @@ const Index = () => {
         </div>
       </div>
       {showRTConsulta && <RTConsulta onClose={() => setShowRTConsulta(false)} motoboys={motoboys.map(m => ({ id_motoboy: m.id_motoboy, nome: m.nome }))} onSelectPedido={(id) => { setIdPedido(id); setShowRTConsulta(false); }} />}
+      {showSolicitacao && <SolicitacaoPedido onClose={() => setShowSolicitacao(false)} motoboys={motoboys} comandoAtual={comandoAtual} />}
     </div>
   );
 };

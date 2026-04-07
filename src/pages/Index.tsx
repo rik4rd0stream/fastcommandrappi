@@ -1,8 +1,11 @@
 import { useState, useEffect } from "react";
 import { collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, orderBy, query } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { supabase } from "@/integrations/supabase/client";
+import { requestNotificationPermission, onForegroundMessage } from "@/lib/fcm";
 import PedidosList from "@/components/PedidosList";
 import RTConsulta from "@/components/RTConsulta";
+import SolicitacaoPedido from "@/components/SolicitacaoPedido";
 
 interface Motoboy {
   id: string;

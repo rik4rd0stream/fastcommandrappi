@@ -159,6 +159,12 @@ const Index = () => {
           </div>
           <div className="flex gap-2">
             <button
+              onClick={() => setShowSolicitacao(true)}
+              className="h-12 px-3 rounded-2xl bg-chart-4/10 border border-chart-4/30 flex items-center justify-center text-accent-foreground text-[10px] font-bold uppercase active:scale-90 shadow-lg transition-transform"
+            >
+              📩 Solicitar
+            </button>
+            <button
               onClick={() => setShowRTConsulta(true)}
               className="h-12 px-3 rounded-2xl bg-accent/10 border border-accent/30 flex items-center justify-center text-accent-foreground text-[10px] font-bold uppercase active:scale-90 shadow-lg transition-transform"
             >

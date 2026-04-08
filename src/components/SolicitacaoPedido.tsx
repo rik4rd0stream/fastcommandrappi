@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 const getRedashUrl = () => {
   if (import.meta.env.DEV) {
@@ -69,31 +71,40 @@ const SolicitacaoPedido = ({ onClose, motoboys, comandoAtual }: SolicitacaoPedid
     if (!pedidoSelecionado) return;
     setEnviando(true);
 
-    const msg = `${comandoAtual} ${pedidoSelecionado.order_id} ${motoboy.id_motoboy}`;
-
     try {
-      // Tenta enviar notificação push via edge function
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      // Fetch Líder's FCM token from Firestore
+      const liderDoc = await getDoc(doc(db, "usuarios", "lider"));
+      if (!liderDoc.exists() || !liderDoc.data()?.fcmToken) {
+        alert("❌ O Líder ainda não registrou o dispositivo dele. Peça para ele abrir o app primeiro.");
+        setEnviando(false);
+        return;
+      }
+
+      const targetToken = liderDoc.data().fcmToken;
+      const msg = `${comandoAtual} ${pedidoSelecionado.order_id} ${motoboy.id_motoboy}`;
       const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(msg)}`;
 
-      await fetch(`${supabaseUrl}/functions/v1/send-push-notification`, {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const res = await fetch(`${supabaseUrl}/functions/v1/send-push-notification`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          title: "📦 Solicitação de Pedido",
-          body: `Pedido #${pedidoSelecionado.order_id} - ${pedidoSelecionado.store_name}`,
+          title: "⚠️ Solicitação de Envio",
+          body: `Ricardo preparou uma nova rota. Clique em Aceitar para enviar ao robô.`,
           whatsappUrl,
-          pedidoId: pedidoSelecionado.order_id,
-          storeName: pedidoSelecionado.store_name,
-          motoboyNome: motoboy.nome,
-          motoboyId: motoboy.id_motoboy,
+          targetToken,
         }),
       });
 
-      alert(`✅ Solicitação enviada!\nPedido #${pedidoSelecionado.order_id}\nMotoboy: ${motoboy.nome}`);
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Erro ao enviar");
+      }
+
+      alert(`✅ Solicitação enviada ao Líder!\nPedido #${pedidoSelecionado.order_id}\nMotoboy: ${motoboy.nome}`);
       setPedidoSelecionado(null);
-    } catch (e) {
-      alert("❌ Erro ao enviar solicitação. Verifique a conexão.");
+    } catch (e: any) {
+      alert(`❌ Erro: ${e.message || "Verifique a conexão."}`);
     } finally {
       setEnviando(false);
     }
@@ -102,14 +113,13 @@ const SolicitacaoPedido = ({ onClose, motoboys, comandoAtual }: SolicitacaoPedid
   return (
     <div className="fixed inset-0 bg-background/95 z-50 p-4 overflow-y-auto">
       <div className="max-w-md mx-auto">
-        {/* Header */}
         <div className="flex justify-between items-center mb-6 pt-4">
           <div>
             <h1 className="text-xl font-black italic text-primary tracking-tighter uppercase">
               Solicitação
             </h1>
             <p className="text-[10px] text-muted-foreground tracking-[0.3em] uppercase font-bold font-mono">
-              Enviar pedido via push
+              Enviar pedido ao Líder
             </p>
           </div>
           <div className="flex gap-2">
@@ -135,7 +145,6 @@ const SolicitacaoPedido = ({ onClose, motoboys, comandoAtual }: SolicitacaoPedid
           </p>
         )}
 
-        {/* Step 1: Selecionar pedido */}
         <div className="mb-4">
           <h2 className="text-[9px] font-bold text-muted-foreground uppercase tracking-[0.3em] ml-2 font-mono italic mb-2">
             1. Selecione o Pedido
@@ -180,7 +189,6 @@ const SolicitacaoPedido = ({ onClose, motoboys, comandoAtual }: SolicitacaoPedid
           )}
         </div>
 
-        {/* Step 2: Selecionar motoboy */}
         {pedidoSelecionado && (
           <div className="animate-in slide-in-from-bottom-2">
             <div className="mb-3 p-3 bg-primary/10 rounded-xl border border-primary/30">

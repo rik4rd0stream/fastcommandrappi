@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
-import { collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, orderBy, query } from "firebase/firestore";
+import { collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, setDoc, orderBy, query } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { supabase } from "@/integrations/supabase/client";
 import { requestNotificationPermission, onForegroundMessage } from "@/lib/fcm";
 import PedidosList from "@/components/PedidosList";
 import RTConsulta from "@/components/RTConsulta";
 import SolicitacaoPedido from "@/components/SolicitacaoPedido";
+import LoginScreen from "@/components/LoginScreen";
 
 interface Motoboy {
   id: string;
@@ -16,6 +16,7 @@ interface Motoboy {
 const COMMANDS = ["!!bundleBR", "!!rebr", "!!Br", "!!forzabr"] as const;
 
 const Index = () => {
+  const [perfil, setPerfil] = useState<string | null>(() => localStorage.getItem("perfil"));
   const [motoboys, setMotoboys] = useState<Motoboy[]>([]);
   const [comandoAtual, setComandoAtual] = useState("!!bundleBR");
   const [idPedido, setIdPedido] = useState("");
@@ -27,11 +28,12 @@ const Index = () => {
   const [showRTConsulta, setShowRTConsulta] = useState(false);
   const [showSolicitacao, setShowSolicitacao] = useState(false);
 
-  // Register for FCM notifications on mount
+  // Register FCM token to Firestore under the user's profile
   useEffect(() => {
+    if (!perfil) return;
+
     const registerFCM = async () => {
       try {
-        // Fetch VAPID key from edge function
         const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
         const res = await fetch(`${supabaseUrl}/functions/v1/get-vapid-key`);
         const { vapidKey } = await res.json();
@@ -41,12 +43,14 @@ const Index = () => {
         }
         const token = await requestNotificationPermission(vapidKey);
         if (token) {
-          // Store token in Supabase
-          await supabase.from("fcm_tokens").upsert(
-            { token, device_info: navigator.userAgent },
-            { onConflict: "token" }
-          );
-          console.log("FCM token registered successfully");
+          // Save FCM token to Firestore under usuarios/{perfil}
+          await setDoc(doc(db, "usuarios", perfil), {
+            perfil,
+            fcmToken: token,
+            deviceInfo: navigator.userAgent,
+            updatedAt: new Date().toISOString(),
+          }, { merge: true });
+          console.log(`FCM token saved for perfil: ${perfil}`);
         }
       } catch (e) {
         console.error("FCM registration error:", e);
@@ -67,7 +71,7 @@ const Index = () => {
     });
 
     return () => unsubscribe?.();
-  }, []);
+  }, [perfil]);
 
   useEffect(() => {
     const q = query(collection(db, "entregadores"), orderBy("nome", "asc"));
@@ -80,6 +84,17 @@ const Index = () => {
     });
     return unsub;
   }, []);
+
+  const handleLogin = (p: string) => setPerfil(p);
+
+  const handleLogout = () => {
+    localStorage.removeItem("perfil");
+    setPerfil(null);
+  };
+
+  if (!perfil) {
+    return <LoginScreen onLogin={handleLogin} />;
+  }
 
   const toggleCadastro = () => {
     setShowCadastro((v) => !v);
@@ -148,6 +163,8 @@ const Index = () => {
     executarEnvio();
   };
 
+  const canSeeSolicitacao = perfil === "programador" || perfil === "lider";
+
   return (
     <div className="min-h-screen bg-background text-foreground p-4">
       <div className="max-w-md mx-auto">
@@ -156,16 +173,18 @@ const Index = () => {
           <div>
             <h1 className="text-2xl font-black italic text-primary tracking-tighter uppercase">Fast Command</h1>
             <p className="text-[10px] text-muted-foreground tracking-[0.3em] uppercase font-bold font-mono">
-              Despacho Rápido
+              Despacho Rápido • {perfil === "programador" ? "Programador" : "Líder"}
             </p>
           </div>
           <div className="flex gap-2">
-            <button
-              onClick={() => setShowSolicitacao(true)}
-              className="h-12 px-3 rounded-2xl bg-chart-4/10 border border-chart-4/30 flex items-center justify-center text-accent-foreground text-[10px] font-bold uppercase active:scale-90 shadow-lg transition-transform"
-            >
-              📩 Solicitar
-            </button>
+            {canSeeSolicitacao && (
+              <button
+                onClick={() => setShowSolicitacao(true)}
+                className="h-12 px-3 rounded-2xl bg-chart-4/10 border border-chart-4/30 flex items-center justify-center text-accent-foreground text-[10px] font-bold uppercase active:scale-90 shadow-lg transition-transform"
+              >
+                📩 Solicitar
+              </button>
+            )}
             <button
               onClick={() => setShowRTConsulta(true)}
               className="h-12 px-3 rounded-2xl bg-accent/10 border border-accent/30 flex items-center justify-center text-accent-foreground text-[10px] font-bold uppercase active:scale-90 shadow-lg transition-transform"
@@ -180,6 +199,14 @@ const Index = () => {
             </button>
           </div>
         </header>
+
+        {/* Logout */}
+        <button
+          onClick={handleLogout}
+          className="mb-4 text-[9px] text-muted-foreground uppercase font-mono tracking-widest hover:text-destructive transition-colors"
+        >
+          🔒 Sair
+        </button>
 
         {/* Painel Cadastro */}
         {showCadastro && (

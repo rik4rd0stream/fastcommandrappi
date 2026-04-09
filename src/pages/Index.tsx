@@ -2,10 +2,13 @@ import { useState, useEffect } from "react";
 import { collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, setDoc, orderBy, query } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { requestNotificationPermission, onForegroundMessage } from "@/lib/fcm";
+import { supabase } from "@/integrations/supabase/client";
+import type { User } from "@supabase/supabase-js";
 import PedidosList from "@/components/PedidosList";
 import RTConsulta from "@/components/RTConsulta";
 import SolicitacaoPedido from "@/components/SolicitacaoPedido";
 import LoginScreen from "@/components/LoginScreen";
+import SignupScreen from "@/components/SignupScreen";
 
 interface Motoboy {
   id: string;
@@ -16,7 +19,12 @@ interface Motoboy {
 const COMMANDS = ["!!bundleBR", "!!rebr", "!!Br", "!!forzabr"] as const;
 
 const Index = () => {
-  const [perfil, setPerfil] = useState<string | null>(() => localStorage.getItem("perfil"));
+  const [user, setUser] = useState<User | null>(null);
+  const [perfil, setPerfil] = useState<string | null>(null);
+  const [nomeUsuario, setNomeUsuario] = useState("");
+  const [authLoading, setAuthLoading] = useState(true);
+  const [authScreen, setAuthScreen] = useState<"login" | "signup">("login");
+
   const [motoboys, setMotoboys] = useState<Motoboy[]>([]);
   const [comandoAtual, setComandoAtual] = useState("!!bundleBR");
   const [idPedido, setIdPedido] = useState("");
@@ -28,9 +36,37 @@ const Index = () => {
   const [showRTConsulta, setShowRTConsulta] = useState(false);
   const [showSolicitacao, setShowSolicitacao] = useState(false);
 
+  // Auth state listener
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
+
+      if (currentUser) {
+        // Fetch profile
+        const { data } = await supabase
+          .from("profiles")
+          .select("perfil, nome")
+          .eq("user_id", currentUser.id)
+          .single();
+
+        if (data) {
+          setPerfil(data.perfil);
+          setNomeUsuario(data.nome);
+        }
+      } else {
+        setPerfil(null);
+        setNomeUsuario("");
+      }
+      setAuthLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   // Register FCM token to Firestore under the user's profile
   useEffect(() => {
-    if (!perfil) return;
+    if (!user || !perfil) return;
 
     const registerFCM = async () => {
       try {
@@ -43,7 +79,6 @@ const Index = () => {
         }
         const token = await requestNotificationPermission(vapidKey);
         if (token) {
-          // Save FCM token to Firestore under usuarios/{perfil}
           await setDoc(doc(db, "usuarios", perfil), {
             perfil,
             fcmToken: token,
@@ -58,7 +93,6 @@ const Index = () => {
     };
     registerFCM();
 
-    // Listen for foreground messages
     const unsubscribe = onForegroundMessage((payload) => {
       console.log("Foreground message:", payload);
       const data = payload.data || {};
@@ -71,29 +105,37 @@ const Index = () => {
     });
 
     return () => unsubscribe?.();
-  }, [perfil]);
+  }, [user, perfil]);
 
   useEffect(() => {
     const q = query(collection(db, "entregadores"), orderBy("nome", "asc"));
     const unsub = onSnapshot(q, (snapshot) => {
-      const list: Motoboy[] = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...(doc.data() as { nome: string; id_motoboy: string }),
+      const list: Motoboy[] = snapshot.docs.map((d) => ({
+        id: d.id,
+        ...(d.data() as { nome: string; id_motoboy: string }),
       }));
       setMotoboys(list);
     });
     return unsub;
   }, []);
 
-  const handleLogin = (p: string) => setPerfil(p);
-
-  const handleLogout = () => {
-    localStorage.removeItem("perfil");
-    setPerfil(null);
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
   };
 
-  if (!perfil) {
-    return <LoginScreen onLogin={handleLogin} />;
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-muted-foreground text-sm animate-pulse">Carregando...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    if (authScreen === "signup") {
+      return <SignupScreen onSignup={() => setAuthScreen("login")} onGoToLogin={() => setAuthScreen("login")} />;
+    }
+    return <LoginScreen onLogin={() => {}} onGoToSignup={() => setAuthScreen("signup")} />;
   }
 
   const toggleCadastro = () => {
@@ -147,7 +189,7 @@ const Index = () => {
 
   const enviar = (nomeMotoboy: string, id: string) => {
     if (!idPedido) return alert("Falta o ID do pedido!");
-    
+
     const executarEnvio = () => {
       const msg = `${comandoAtual} ${idPedido} ${id}`;
       setPedidosEnviados((prev) => new Set(prev).add(idPedido));
@@ -159,11 +201,12 @@ const Index = () => {
     if (pedidosEnviados.has(idPedido)) {
       if (!confirm("⚠️ Você já tentou enviar esse pedido!\nDeseja repetir mesmo assim?")) return;
     }
-    
+
     executarEnvio();
   };
 
-  const canSeeSolicitacao = perfil === "programador" || perfil === "lider";
+  const perfilLabel = perfil === "programador" ? "Programador" : perfil === "lider" ? "Líder" : "Usuário";
+  const canSeeSolicitacao = perfil === "programador";
 
   return (
     <div className="min-h-screen bg-background text-foreground p-4">
@@ -173,7 +216,7 @@ const Index = () => {
           <div>
             <h1 className="text-2xl font-black italic text-primary tracking-tighter uppercase">Fast Command</h1>
             <p className="text-[10px] text-muted-foreground tracking-[0.3em] uppercase font-bold font-mono">
-              Despacho Rápido • {perfil === "programador" ? "Programador" : "Líder"}
+              Despacho Rápido • {perfilLabel}
             </p>
           </div>
           <div className="flex gap-2">
@@ -205,7 +248,7 @@ const Index = () => {
           onClick={handleLogout}
           className="mb-4 text-[9px] text-muted-foreground uppercase font-mono tracking-widest hover:text-destructive transition-colors"
         >
-          🔒 Sair
+          🔒 Sair ({nomeUsuario || user.email})
         </button>
 
         {/* Painel Cadastro */}

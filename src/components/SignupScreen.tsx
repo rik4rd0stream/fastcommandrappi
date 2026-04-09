@@ -111,12 +111,6 @@ const SignupScreen = ({ onSignup, onGoToLogin }: SignupScreenProps) => {
           >
             {loading ? "Criando..." : "Criar Conta"}
           </button>
-          <button
-            onClick={onGoToLogin}
-            className="w-full p-3 text-primary text-xs font-bold uppercase tracking-wider"
-          >
-            Já tenho conta
-          </button>
         </div>
       </div>
     </div>

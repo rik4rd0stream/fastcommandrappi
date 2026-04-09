@@ -23,7 +23,7 @@ const Index = () => {
   const [perfil, setPerfil] = useState<string | null>(null);
   const [nomeUsuario, setNomeUsuario] = useState("");
   const [authLoading, setAuthLoading] = useState(true);
-  const [authScreen, setAuthScreen] = useState<"login" | "signup">("login");
+  
 
   const [motoboys, setMotoboys] = useState<Motoboy[]>([]);
   const [comandoAtual, setComandoAtual] = useState("!!bundleBR");
@@ -35,6 +35,7 @@ const Index = () => {
   const [pedidosEnviados, setPedidosEnviados] = useState<Set<string>>(new Set());
   const [showRTConsulta, setShowRTConsulta] = useState(false);
   const [showSolicitacao, setShowSolicitacao] = useState(false);
+  const [showSignup, setShowSignup] = useState(false);
 
   // Auth state listener
   useEffect(() => {
@@ -64,9 +65,9 @@ const Index = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Register FCM token to Firestore under the user's profile
+  // Register FCM token only for líder (notification receiver)
   useEffect(() => {
-    if (!user || !perfil) return;
+    if (!user || perfil !== "lider") return;
 
     const registerFCM = async () => {
       try {
@@ -132,11 +133,12 @@ const Index = () => {
   }
 
   if (!user) {
-    if (authScreen === "signup") {
-      return <SignupScreen onSignup={() => setAuthScreen("login")} onGoToLogin={() => setAuthScreen("login")} />;
-    }
-    return <LoginScreen onLogin={() => {}} onGoToSignup={() => setAuthScreen("signup")} />;
+    return <LoginScreen onLogin={() => {}} />;
   }
+
+  const perfilLabel = perfil === "programador" ? "Programador" : perfil === "lider" ? "Líder" : "Usuário";
+  const canSeeSolicitacao = perfil === "programador";
+  const canSeeSignup = perfil === "programador";
 
   const toggleCadastro = () => {
     setShowCadastro((v) => !v);
@@ -205,8 +207,6 @@ const Index = () => {
     executarEnvio();
   };
 
-  const perfilLabel = perfil === "programador" ? "Programador" : perfil === "lider" ? "Líder" : "Usuário";
-  const canSeeSolicitacao = perfil === "programador";
 
   return (
     <div className="min-h-screen bg-background text-foreground p-4">
@@ -226,6 +226,14 @@ const Index = () => {
                 className="h-12 px-3 rounded-2xl bg-chart-4/10 border border-chart-4/30 flex items-center justify-center text-accent-foreground text-[10px] font-bold uppercase active:scale-90 shadow-lg transition-transform"
               >
                 📩 Solicitar
+              </button>
+            )}
+            {canSeeSignup && (
+              <button
+                onClick={() => setShowSignup(true)}
+                className="h-12 px-3 rounded-2xl bg-secondary border border-border flex items-center justify-center text-secondary-foreground text-[10px] font-bold uppercase active:scale-90 shadow-lg transition-transform"
+              >
+                👤+
               </button>
             )}
             <button
@@ -379,6 +387,14 @@ const Index = () => {
       </div>
       {showRTConsulta && <RTConsulta onClose={() => setShowRTConsulta(false)} motoboys={motoboys.map(m => ({ id_motoboy: m.id_motoboy, nome: m.nome }))} onSelectPedido={(id) => { setIdPedido(id); setShowRTConsulta(false); }} />}
       {showSolicitacao && <SolicitacaoPedido onClose={() => setShowSolicitacao(false)} motoboys={motoboys} comandoAtual={comandoAtual} />}
+      {showSignup && (
+        <div className="fixed inset-0 bg-background/95 z-50 overflow-y-auto">
+          <div className="absolute top-4 right-4">
+            <button onClick={() => setShowSignup(false)} className="w-10 h-10 rounded-2xl bg-destructive/10 border border-destructive/30 flex items-center justify-center text-destructive text-lg font-bold active:scale-90 transition-transform">✕</button>
+          </div>
+          <SignupScreen onSignup={() => setShowSignup(false)} onGoToLogin={() => setShowSignup(false)} />
+        </div>
+      )}
     </div>
   );
 };

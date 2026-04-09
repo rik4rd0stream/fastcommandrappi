@@ -138,6 +138,10 @@ const Index = () => {
     return <LoginScreen onLogin={() => {}} onGoToSignup={() => setAuthScreen("signup")} />;
   }
 
+  const perfilLabel = perfil === "programador" ? "Programador" : perfil === "lider" ? "Líder" : "Usuário";
+  const canSeeSolicitacao = perfil === "programador";
+  const canSeeSignup = perfil === "programador";
+
   const toggleCadastro = () => {
     setShowCadastro((v) => !v);
     if (showCadastro) resetForm();

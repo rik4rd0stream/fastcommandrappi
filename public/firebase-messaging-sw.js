@@ -2,6 +2,7 @@
 importScripts("https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js");
 importScripts("https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js");
 
+// Inicialização do Firebase
 firebase.initializeApp({
   apiKey: "AIzaSyB8ojoSzZRfgw6PRPTZ-fF3NfZRCJArt5M",
   authDomain: "motoboy-13742.firebaseapp.com",
@@ -13,7 +14,29 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-// Handle background messages
+// --- MELHORIA DE ESTABILIDADE PWA ---
+// Força o Service Worker a se ativar assim que for instalado, 
+// sem esperar que o usuário feche todas as abas.
+self.addEventListener("install", (event) => {
+  self.skipWaiting();
+});
+
+// Garante que o Service Worker tome controle da página imediatamente após a ativação.
+self.addEventListener("activate", (event) => {
+  event.waitUntil(clients.claim());
+});
+
+// Captura erros para evitar que o SW "congele" a aplicação
+self.addEventListener('error', (event) => {
+  console.error('[SW Error]:', event.message);
+});
+
+self.addEventListener('unhandledrejection', (event) => {
+  console.error('[SW Unhandled Rejection]:', event.reason);
+});
+// ------------------------------------
+
+// Lógica de mensagens em segundo plano
 messaging.onBackgroundMessage((payload) => {
   console.log("[firebase-messaging-sw.js] Background message:", payload);
 
@@ -40,7 +63,7 @@ messaging.onBackgroundMessage((payload) => {
   self.registration.showNotification(title, options);
 });
 
-// Handle notification click
+// Lógica de clique na notificação
 self.addEventListener("notificationclick", (event) => {
   console.log("[firebase-messaging-sw.js] Notification click:", event.action);
   event.notification.close();
@@ -50,7 +73,6 @@ self.addEventListener("notificationclick", (event) => {
   if (event.action === "aceitar" && whatsappUrl) {
     event.waitUntil(clients.openWindow(whatsappUrl));
   } else if (whatsappUrl) {
-    // Clicking the notification body also opens WhatsApp
     event.waitUntil(clients.openWindow(whatsappUrl));
   }
 });

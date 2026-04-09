@@ -209,8 +209,6 @@ const Index = () => {
     executarEnvio();
   };
 
-  const perfilLabel = perfil === "programador" ? "Programador" : perfil === "lider" ? "Líder" : "Usuário";
-  const canSeeSolicitacao = perfil === "programador";
 
   return (
     <div className="min-h-screen bg-background text-foreground p-4">

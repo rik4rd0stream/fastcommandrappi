@@ -3,7 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface LoginScreenProps {
   onLogin: () => void;
-  onGoToSignup: () => void;
 }
 
 const LoginScreen = ({ onLogin, onGoToSignup }: LoginScreenProps) => {

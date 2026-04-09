@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { auth } from "@/lib/firebase"; // Importando o seu Firebase
+import { signInWithEmailAndPassword } from "firebase/auth";
 
 interface LoginScreenProps {
   onLogin: () => void;
@@ -16,14 +17,16 @@ const LoginScreen = ({ onLogin }: LoginScreenProps) => {
     setLoading(true);
     setErro("");
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password: senha });
-
-    if (error) {
-      setErro("Email ou senha incorretos.");
-    } else {
+    try {
+      // TROCADO: Agora usa o Firebase para logar
+      await signInWithEmailAndPassword(auth, email, senha);
       onLogin();
+    } catch (error: any) {
+      console.error("Erro no login:", error);
+      setErro("Email ou senha incorretos no Firebase.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
@@ -34,7 +37,7 @@ const LoginScreen = ({ onLogin }: LoginScreenProps) => {
             Fast Command
           </h1>
           <p className="text-[10px] text-muted-foreground tracking-[0.3em] uppercase font-bold font-mono">
-            Identificação
+            Identificação Firebase
           </p>
         </div>
 

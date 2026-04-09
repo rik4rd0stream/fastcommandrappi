@@ -132,10 +132,7 @@ const Index = () => {
   }
 
   if (!user) {
-    if (authScreen === "signup") {
-      return <SignupScreen onSignup={() => setAuthScreen("login")} onGoToLogin={() => setAuthScreen("login")} />;
-    }
-    return <LoginScreen onLogin={() => {}} onGoToSignup={() => setAuthScreen("signup")} />;
+    return <LoginScreen onLogin={() => {}} />;
   }
 
   const perfilLabel = perfil === "programador" ? "Programador" : perfil === "lider" ? "Líder" : "Usuário";

@@ -35,6 +35,7 @@ const Index = () => {
   const [pedidosEnviados, setPedidosEnviados] = useState<Set<string>>(new Set());
   const [showRTConsulta, setShowRTConsulta] = useState(false);
   const [showSolicitacao, setShowSolicitacao] = useState(false);
+  const [showSignup, setShowSignup] = useState(false);
 
   // Auth state listener
   useEffect(() => {

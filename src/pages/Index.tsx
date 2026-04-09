@@ -65,9 +65,9 @@ const Index = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Register FCM token to Firestore under the user's profile
+  // Register FCM token only for líder (notification receiver)
   useEffect(() => {
-    if (!user || !perfil) return;
+    if (!user || perfil !== "lider") return;
 
     const registerFCM = async () => {
       try {
@@ -228,6 +228,14 @@ const Index = () => {
                 📩 Solicitar
               </button>
             )}
+            {canSeeSignup && (
+              <button
+                onClick={() => setShowSignup(true)}
+                className="h-12 px-3 rounded-2xl bg-secondary border border-border flex items-center justify-center text-secondary-foreground text-[10px] font-bold uppercase active:scale-90 shadow-lg transition-transform"
+              >
+                👤+
+              </button>
+            )}
             <button
               onClick={() => setShowRTConsulta(true)}
               className="h-12 px-3 rounded-2xl bg-accent/10 border border-accent/30 flex items-center justify-center text-accent-foreground text-[10px] font-bold uppercase active:scale-90 shadow-lg transition-transform"
@@ -379,6 +387,14 @@ const Index = () => {
       </div>
       {showRTConsulta && <RTConsulta onClose={() => setShowRTConsulta(false)} motoboys={motoboys.map(m => ({ id_motoboy: m.id_motoboy, nome: m.nome }))} onSelectPedido={(id) => { setIdPedido(id); setShowRTConsulta(false); }} />}
       {showSolicitacao && <SolicitacaoPedido onClose={() => setShowSolicitacao(false)} motoboys={motoboys} comandoAtual={comandoAtual} />}
+      {showSignup && (
+        <div className="fixed inset-0 bg-background/95 z-50 overflow-y-auto">
+          <div className="absolute top-4 right-4">
+            <button onClick={() => setShowSignup(false)} className="w-10 h-10 rounded-2xl bg-destructive/10 border border-destructive/30 flex items-center justify-center text-destructive text-lg font-bold active:scale-90 transition-transform">✕</button>
+          </div>
+          <SignupScreen onSignup={() => setShowSignup(false)} onGoToLogin={() => setShowSignup(false)} />
+        </div>
+      )}
     </div>
   );
 };

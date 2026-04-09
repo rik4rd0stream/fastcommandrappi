@@ -5,7 +5,7 @@ interface LoginScreenProps {
   onLogin: () => void;
 }
 
-const LoginScreen = ({ onLogin, onGoToSignup }: LoginScreenProps) => {
+const LoginScreen = ({ onLogin }: LoginScreenProps) => {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [erro, setErro] = useState("");
@@ -66,12 +66,6 @@ const LoginScreen = ({ onLogin, onGoToSignup }: LoginScreenProps) => {
             className="w-full p-4 bg-primary text-primary-foreground rounded-2xl font-bold uppercase text-sm active:scale-95 transition-all disabled:opacity-50"
           >
             {loading ? "Entrando..." : "Entrar"}
-          </button>
-          <button
-            onClick={onGoToSignup}
-            className="w-full p-3 text-primary text-xs font-bold uppercase tracking-wider"
-          >
-            Criar conta
           </button>
         </div>
       </div>

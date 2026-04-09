@@ -23,7 +23,7 @@ const Index = () => {
   const [perfil, setPerfil] = useState<string | null>(null);
   const [nomeUsuario, setNomeUsuario] = useState("");
   const [authLoading, setAuthLoading] = useState(true);
-  const [authScreen, setAuthScreen] = useState<"login" | "signup">("login");
+  
 
   const [motoboys, setMotoboys] = useState<Motoboy[]>([]);
   const [comandoAtual, setComandoAtual] = useState("!!bundleBR");

@@ -1,29 +1,30 @@
 import { useState } from "react";
-
-const PROFILES: Record<string, { password: string; label: string }> = {
-  programador: { password: "1234", label: "Programador" },
-  lider: { password: "5678", label: "Líder (Master)" },
-};
+import { supabase } from "@/integrations/supabase/client";
 
 interface LoginScreenProps {
-  onLogin: (perfil: string) => void;
+  onLogin: () => void;
+  onGoToSignup: () => void;
 }
 
-const LoginScreen = ({ onLogin }: LoginScreenProps) => {
-  const [selectedPerfil, setSelectedPerfil] = useState<string | null>(null);
+const LoginScreen = ({ onLogin, onGoToSignup }: LoginScreenProps) => {
+  const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [erro, setErro] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
-    if (!selectedPerfil) return;
-    const profile = PROFILES[selectedPerfil];
-    if (senha === profile.password) {
-      localStorage.setItem("perfil", selectedPerfil);
-      onLogin(selectedPerfil);
+  const handleLogin = async () => {
+    if (!email || !senha) return setErro("Preencha todos os campos.");
+    setLoading(true);
+    setErro("");
+
+    const { error } = await supabase.auth.signInWithPassword({ email, password: senha });
+
+    if (error) {
+      setErro("Email ou senha incorretos.");
     } else {
-      setErro("Senha incorreta!");
-      setSenha("");
+      onLogin();
     }
+    setLoading(false);
   };
 
   return (
@@ -38,55 +39,42 @@ const LoginScreen = ({ onLogin }: LoginScreenProps) => {
           </p>
         </div>
 
-        {!selectedPerfil ? (
-          <div className="space-y-3">
-            <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-[0.3em] text-center font-mono italic mb-4">
-              Selecione seu perfil
+        <div className="space-y-4">
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => { setEmail(e.target.value); setErro(""); }}
+            placeholder="Email"
+            className="w-full p-4 bg-background border-2 border-border rounded-2xl text-base font-bold text-center text-foreground outline-none focus:border-primary/50 transition-all"
+            autoFocus
+          />
+          <input
+            type="password"
+            value={senha}
+            onChange={(e) => { setSenha(e.target.value); setErro(""); }}
+            placeholder="Senha"
+            className="w-full p-4 bg-background border-2 border-border rounded-2xl text-base font-bold text-center text-foreground outline-none focus:border-primary/50 transition-all"
+            onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+          />
+          {erro && (
+            <p className="text-destructive text-[11px] text-center bg-destructive/10 rounded-xl p-2 border border-destructive/20">
+              {erro}
             </p>
-            {Object.entries(PROFILES).map(([key, { label }]) => (
-              <button
-                key={key}
-                onClick={() => setSelectedPerfil(key)}
-                className="w-full p-5 bg-card rounded-2xl border border-border text-foreground font-bold text-lg uppercase active:scale-95 transition-all shadow-lg"
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <button
-              onClick={() => { setSelectedPerfil(null); setSenha(""); setErro(""); }}
-              className="text-[10px] text-muted-foreground uppercase font-bold"
-            >
-              ← Voltar
-            </button>
-            <p className="text-center text-lg font-bold text-primary uppercase">
-              {PROFILES[selectedPerfil].label}
-            </p>
-            <input
-              type="password"
-              inputMode="numeric"
-              value={senha}
-              onChange={(e) => { setSenha(e.target.value); setErro(""); }}
-              placeholder="Senha"
-              className="w-full p-4 bg-background border-2 border-border rounded-2xl text-xl font-black text-center text-foreground outline-none focus:border-primary/50 transition-all"
-              onKeyDown={(e) => e.key === "Enter" && handleLogin()}
-              autoFocus
-            />
-            {erro && (
-              <p className="text-destructive text-[11px] text-center bg-destructive/10 rounded-xl p-2 border border-destructive/20">
-                {erro}
-              </p>
-            )}
-            <button
-              onClick={handleLogin}
-              className="w-full p-4 bg-primary text-primary-foreground rounded-2xl font-bold uppercase text-sm active:scale-95 transition-all"
-            >
-              Entrar
-            </button>
-          </div>
-        )}
+          )}
+          <button
+            onClick={handleLogin}
+            disabled={loading}
+            className="w-full p-4 bg-primary text-primary-foreground rounded-2xl font-bold uppercase text-sm active:scale-95 transition-all disabled:opacity-50"
+          >
+            {loading ? "Entrando..." : "Entrar"}
+          </button>
+          <button
+            onClick={onGoToSignup}
+            className="w-full p-3 text-primary text-xs font-bold uppercase tracking-wider"
+          >
+            Criar conta
+          </button>
+        </div>
       </div>
     </div>
   );

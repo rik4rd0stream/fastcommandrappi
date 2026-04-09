@@ -1,0 +1,126 @@
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+
+interface SignupScreenProps {
+  onSignup: () => void;
+  onGoToLogin: () => void;
+}
+
+const PERFIS = [
+  { value: "usuario", label: "Usuário" },
+  { value: "lider", label: "Líder" },
+  { value: "programador", label: "Programador" },
+] as const;
+
+const SignupScreen = ({ onSignup, onGoToLogin }: SignupScreenProps) => {
+  const [nome, setNome] = useState("");
+  const [email, setEmail] = useState("");
+  const [senha, setSenha] = useState("");
+  const [perfil, setPerfil] = useState<string>("usuario");
+  const [erro, setErro] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSignup = async () => {
+    if (!nome || !email || !senha) return setErro("Preencha todos os campos.");
+    if (senha.length < 6) return setErro("A senha deve ter pelo menos 6 caracteres.");
+    setLoading(true);
+    setErro("");
+
+    const { error } = await supabase.auth.signUp({
+      email,
+      password: senha,
+      options: {
+        data: { nome, perfil },
+      },
+    });
+
+    if (error) {
+      setErro(error.message);
+    } else {
+      onSignup();
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-4">
+      <div className="w-full max-w-sm">
+        <div className="text-center mb-8">
+          <h1 className="text-2xl font-black italic text-primary tracking-tighter uppercase">
+            Fast Command
+          </h1>
+          <p className="text-[10px] text-muted-foreground tracking-[0.3em] uppercase font-bold font-mono">
+            Cadastro
+          </p>
+        </div>
+
+        <div className="space-y-4">
+          <input
+            type="text"
+            value={nome}
+            onChange={(e) => { setNome(e.target.value); setErro(""); }}
+            placeholder="Nome"
+            className="w-full p-4 bg-background border-2 border-border rounded-2xl text-base font-bold text-center text-foreground outline-none focus:border-primary/50 transition-all"
+            autoFocus
+          />
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => { setEmail(e.target.value); setErro(""); }}
+            placeholder="Email"
+            className="w-full p-4 bg-background border-2 border-border rounded-2xl text-base font-bold text-center text-foreground outline-none focus:border-primary/50 transition-all"
+          />
+          <input
+            type="password"
+            value={senha}
+            onChange={(e) => { setSenha(e.target.value); setErro(""); }}
+            placeholder="Senha (mín. 6 caracteres)"
+            className="w-full p-4 bg-background border-2 border-border rounded-2xl text-base font-bold text-center text-foreground outline-none focus:border-primary/50 transition-all"
+          />
+
+          <div>
+            <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-[0.3em] text-center font-mono italic mb-2">
+              Tipo de perfil
+            </p>
+            <div className="grid grid-cols-3 gap-2">
+              {PERFIS.map((p) => (
+                <button
+                  key={p.value}
+                  onClick={() => setPerfil(p.value)}
+                  className={`p-3 rounded-xl font-bold text-[11px] transition-all ${
+                    perfil === p.value
+                      ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
+                      : "bg-secondary text-muted-foreground border border-border"
+                  }`}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {erro && (
+            <p className="text-destructive text-[11px] text-center bg-destructive/10 rounded-xl p-2 border border-destructive/20">
+              {erro}
+            </p>
+          )}
+          <button
+            onClick={handleSignup}
+            disabled={loading}
+            className="w-full p-4 bg-primary text-primary-foreground rounded-2xl font-bold uppercase text-sm active:scale-95 transition-all disabled:opacity-50"
+          >
+            {loading ? "Criando..." : "Criar Conta"}
+          </button>
+          <button
+            onClick={onGoToLogin}
+            className="w-full p-3 text-primary text-xs font-bold uppercase tracking-wider"
+          >
+            Já tenho conta
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default SignupScreen;

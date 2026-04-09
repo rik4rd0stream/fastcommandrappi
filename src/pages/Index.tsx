@@ -23,7 +23,6 @@ const Index = () => {
   const [perfil, setPerfil] = useState<string | null>(null);
   const [nomeUsuario, setNomeUsuario] = useState("");
   const [authLoading, setAuthLoading] = useState(true);
-  
 
   const [motoboys, setMotoboys] = useState<Motoboy[]>([]);
   const [comandoAtual, setComandoAtual] = useState("!!bundleBR");
@@ -37,35 +36,53 @@ const Index = () => {
   const [showSolicitacao, setShowSolicitacao] = useState(false);
   const [showSignup, setShowSignup] = useState(false);
 
-  // Auth state listener
+  // --- LÓGICA DE AUTH CORRIGIDA COM TIMEOUT ---
   useEffect(() => {
+    // Failsafe: Se em 4 segundos a resposta do Supabase não chegar, libera a tela
+    const authTimeout = setTimeout(() => {
+      if (authLoading) {
+        console.warn("Auth timeout atingido. Forçando encerramento do carregamento.");
+        setAuthLoading(false);
+      }
+    }, 4000);
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       const currentUser = session?.user ?? null;
       setUser(currentUser);
 
       if (currentUser) {
-        // Fetch profile
-        const { data } = await supabase
-          .from("profiles")
-          .select("perfil, nome")
-          .eq("user_id", currentUser.id)
-          .single();
+        try {
+          const { data, error } = await supabase
+            .from("profiles")
+            .select("perfil, nome")
+            .eq("user_id", currentUser.id)
+            .single();
 
-        if (data) {
-          setPerfil(data.perfil);
-          setNomeUsuario(data.nome);
+          if (data) {
+            setPerfil(data.perfil);
+            setNomeUsuario(data.nome);
+          }
+          if (error) console.error("Erro ao buscar perfil:", error);
+        } catch (e) {
+          console.error("Erro na busca de dados de perfil:", e);
         }
       } else {
         setPerfil(null);
         setNomeUsuario("");
       }
+      
+      // Finaliza o carregamento e limpa o timer de segurança
       setAuthLoading(false);
+      clearTimeout(authTimeout);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(authTimeout);
+    };
   }, []);
 
-  // Register FCM token only for líder (notification receiver)
+  // Register FCM token only for líder
   useEffect(() => {
     if (!user || perfil !== "lider") return;
 
@@ -74,10 +91,12 @@ const Index = () => {
         const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
         const res = await fetch(`${supabaseUrl}/functions/v1/get-vapid-key`);
         const { vapidKey } = await res.json();
+        
         if (!vapidKey) {
           console.warn("FCM VAPID key not configured yet");
           return;
         }
+
         const token = await requestNotificationPermission(vapidKey);
         if (token) {
           await setDoc(doc(db, "usuarios", perfil), {
@@ -92,6 +111,7 @@ const Index = () => {
         console.error("FCM registration error:", e);
       }
     };
+
     registerFCM();
 
     const unsubscribe = onForegroundMessage((payload) => {
@@ -207,11 +227,9 @@ const Index = () => {
     executarEnvio();
   };
 
-
   return (
     <div className="min-h-screen bg-background text-foreground p-4">
       <div className="max-w-md mx-auto">
-        {/* Header */}
         <header className="flex justify-between items-center mb-6 pt-4">
           <div>
             <h1 className="text-2xl font-black italic text-primary tracking-tighter uppercase">Fast Command</h1>
@@ -251,15 +269,13 @@ const Index = () => {
           </div>
         </header>
 
-        {/* Logout */}
         <button
           onClick={handleLogout}
           className="mb-4 text-[9px] text-muted-foreground uppercase font-mono tracking-widest hover:text-destructive transition-colors"
         >
-          🔒 Sair ({nomeUsuario || user.email})
+          🔒 Sair ({nomeUsuario || user?.email})
         </button>
 
-        {/* Painel Cadastro */}
         {showCadastro && (
           <div className="mb-8 p-6 bg-card rounded-3xl border border-primary/20 shadow-2xl animate-in slide-in-from-top-2">
             <h3 className="text-xs font-bold text-primary mb-4 uppercase">
@@ -309,7 +325,6 @@ const Index = () => {
           </div>
         )}
 
-        {/* Comandos */}
         <div className="grid grid-cols-3 gap-2 mb-6">
           {COMMANDS.map((cmd) => (
             <button
@@ -326,13 +341,11 @@ const Index = () => {
           ))}
         </div>
 
-        {/* Pedidos da API */}
         <PedidosList
           onSelectPedido={(id) => setIdPedido(id)}
           pedidoSelecionado={idPedido}
         />
 
-        {/* Input Pedido Manual */}
         <div className="mb-6">
           <div className="relative mb-2">
             <input
@@ -357,7 +370,6 @@ const Index = () => {
           </button>
         </div>
 
-        {/* Lista Motoboys */}
         <h2 className="text-[9px] font-bold text-muted-foreground mb-4 uppercase tracking-[0.3em] ml-2 font-mono italic">
           Destinos Disponíveis (3×3):
         </h2>
